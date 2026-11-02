@@ -450,6 +450,17 @@
     let ordersUnsubscribe = null;
     let authReady = false;
     let suppressAnonymous = false;
+    let anonymousSignInPromise = null;
+
+    async function ensureAnonymousSession() {
+      if (auth.currentUser) return auth.currentUser;
+      if (!anonymousSignInPromise) {
+        anonymousSignInPromise = signInAnonymously(auth)
+          .then(credential => credential.user)
+          .finally(() => { anonymousSignInPromise = null; });
+      }
+      return await anonymousSignInPromise;
+    }
 
     const menuRef = collection(db, 'mocktails');
     const ordersRef = collection(db, 'orders');
@@ -507,8 +518,8 @@
       onAuthStateChanged(auth, async user => {
         if (!user) {
           if (suppressAnonymous) return;
-          try { await signInAnonymously(auth); }
-          catch (e) { console.error(e); alert('No se pudo iniciar la sesión de invitado. Revisa la conexión.'); }
+          try { await ensureAnonymousSession(); }
+          catch (e) { console.error(e); alert('No se pudo iniciar la sesión de invitado: ' + (e.message || 'Revisa la conexión.')); }
           return;
         }
         currentUid = user.uid;
@@ -603,22 +614,25 @@
       if (!currentUser) { alert('Por favor ingresa tu nombre antes de pedir.'); document.getElementById('guest-name').focus(); return; }
       const drink = appData.menu.find(m => m.id === drinkId);
       if (!drink || drink.soldOut) return;
-      if (!currentUid || isBartender) { alert('Espera a que cargue tu sesión de invitado.'); return; }
-      const newRef = doc(ordersRef);
       try {
-        await runTransaction(db, async transaction => {
-          const existing = await transaction.get(query(ordersRef, where('guestUid','==',currentUid)));
-          const hasActive = existing.docs.some(d => ['pendiente','preparando'].includes(d.data().status));
-          if (hasActive) throw new Error('Ya tienes una comanda activa. Espera a que esté lista antes de pedir otra.');
-          transaction.set(newRef, {
-            guestUid: currentUid, guest: currentUser, drinkId: drink.id,
-            drinkName: drink.name, status: 'pendiente',
-            time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),
-            createdAt: serverTimestamp()
-          });
+        let guestAuthUser = auth.currentUser;
+        if (guestAuthUser && !guestAuthUser.isAnonymous) {
+          throw new Error('Este teléfono tiene abierta una sesión de cuenta. Cierra la sesión del Centro de Mando para usarlo como invitado.');
+        }
+        if (!guestAuthUser) guestAuthUser = await ensureAnonymousSession();
+        currentUid = guestAuthUser.uid;
+        if (!currentUid) throw new Error('No se pudo iniciar la sesión de invitado. Inténtalo de nuevo.');
+        const existing = await getDocs(query(ordersRef, where('guestUid','==',currentUid)));
+        const hasActive = existing.docs.some(d => ['pendiente','preparando'].includes(d.data().status));
+        if (hasActive) throw new Error('Ya tienes una comanda activa. Espera a que esté lista antes de pedir otra.');
+        await addDoc(ordersRef, {
+          guestUid: currentUid, guest: currentUser, drinkId: drink.id,
+          drinkName: drink.name, status: 'pendiente',
+          time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),
+          createdAt: serverTimestamp()
         });
         alert(`¡Comanda enviada a la barra! Preparando tu ${drink.name}.`);
-      } catch (e) { alert(e.message || 'No se pudo enviar la comanda.'); }
+      } catch (e) { console.error('Error al enviar comanda:', e); alert(e.message || 'No se pudo enviar la comanda.'); }
     };
     window.updateOrderStatus = async function(orderId,status) {
       if (!isBartender) return;
