@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mocktails JAS Reunión - Menú & Centro de Mando</title>
+  
+  <!-- Tipografías Vintage -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Special+Elite&family=Cormorant+Garamond:ital,wght@0,500;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome e Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- QRCode.js para generación de QR -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <style>
+    :root {
+      --bg-paper: #f4eedd;
+      --bg-card: #ebdcb9;
+      --ink-dark: #12100e;
+      --ink-muted: #4a4238;
+      --accent-gold: #b38b4d;
+      --accent-dark: #2b251f;
+      --border-color: #2b251f;
+      --status-pending: #a36100;
+      --status-prep: #2c5282;
+      --status-ready: #276749;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Cormorant Garamond', serif;
+    }
+
+    body {
+      background-color: var(--bg-paper);
+      background-image: radial-gradient(#d3c5a3 1px, transparent 0);
+      background-size: 24px 24px;
+      color: var(--ink-dark);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 15px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 650px;
+      margin: 0 auto;
+    }
+
+    .vintage-frame {
+      border: 3px solid var(--border-color);
+      outline: 2px solid var(--border-color);
+      outline-offset: 4px;
+      padding: 20px 15px;
+      background: var(--bg-paper);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      position: relative;
+      margin-bottom: 25px;
+    }
+
+    .vintage-frame::before {
+      content: '❖';
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-paper);
+      padding: 0 8px;
+      font-size: 16px;
+      color: var(--border-color);
+    }
+
+    .brand-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 5px;
+      color: var(--ink-dark);
+    }
+
+    .brand-subtitle {
+      font-family: 'Cinzel', serif;
+      font-size: 1.1rem;
+      text-align: center;
+      letter-spacing: 4px;
+      color: var(--ink-muted);
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+
+    .section-header {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      text-align: center;
+      margin: 15px 0;
+      text-decoration: underline;
+      text-underline-offset: 5px;
+    }
+
+    .nav-toggle {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .btn-vintage {
+      background: var(--ink-dark);
+      color: var(--bg-paper);
+      border: 1px solid var(--border-color);
+      padding: 8px 16px;
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-vintage:hover {
+      background: var(--accent-gold);
+      color: var(--ink-dark);
+    }
+
+    .btn-vintage.secondary {
+      background: transparent;
+      color: var(--ink-dark);
+    }
+
+    .btn-vintage.secondary:hover {
+      background: var(--ink-dark);
+      color: var(--bg-paper);
+    }
+
+    .btn-vintage.danger {
+      background: #742a2a;
+      color: white;
+    }
+
+    .btn-vintage.success {
+      background: #276749;
+      color: white;
+    }
+
+    .guest-welcome {
+      background: var(--bg-card);
+      border: 1px dashed var(--border-color);
+      padding: 15px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .input-vintage {
+      width: 100%;
+      max-width: 300px;
+      padding: 8px 12px;
+      background: var(--bg-paper);
+      border: 1px solid var(--border-color);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem;
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 15px;
+    }
+
+    .drink-card {
+      border: 1px solid var(--border-color);
+      padding: 15px;
+      background: var(--bg-paper);
+      position: relative;
+      transition: transform 0.15s ease;
+    }
+
+    .drink-card.sold-out {
+      opacity: 0.55;
+      filter: grayscale(0.8);
+    }
+
+    .drink-card.sold-out::after {
+      content: 'AGOTADO';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-12deg);
+      border: 3px solid #9b2c2c;
+      color: #9b2c2c;
+      font-family: 'Cinzel', serif;
+      font-size: 1.8rem;
+      font-weight: bold;
+      padding: 4px 15px;
+      letter-spacing: 3px;
+      background: rgba(244, 238, 221, 0.85);
+      z-index: 2;
+    }
+
+    .drink-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.35rem;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px dotted var(--border-color);
+      padding-bottom: 4px;
+      margin-bottom: 6px;
+    }
+
+    .drink-desc {
+      font-size: 1rem;
+      color: var(--ink-muted);
+      font-style: italic;
+      margin-bottom: 10px;
+      line-height: 1.3;
+    }
+
+    .drink-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .order-status-box {
+      border: 2px solid var(--border-color);
+      background: var(--bg-card);
+      padding: 15px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      font-family: 'Cinzel', serif;
+      font-size: 0.9rem;
+      color: white;
+      margin-top: 5px;
+    }
+
+    .status-badge.pending { background-color: var(--status-pending); }
+    .status-badge.preparing { background-color: var(--status-prep); }
+    .status-badge.ready { background-color: var(--status-ready); }
+
+    .panel-hidden {
+      display: none;
+    }
+
+    .admin-controls {
+      background: #e2d3b1;
+      border: 1px solid var(--border-color);
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+
+    .order-ticket {
+      background: #fffdf5;
+      border: 1px dashed var(--border-color);
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .order-ticket-header {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px dotted #ccc;
+      padding-bottom: 4px;
+      font-weight: bold;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 15px;
+    }
+
+    .modal-content {
+      background: var(--bg-paper);
+      border: 3px solid var(--border-color);
+      padding: 20px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    #qrcode img {
+      margin: 15px auto;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="vintage-frame">
+      <h1 class="brand-title">Mocktails</h1>
+      <div class="brand-subtitle">JAS REUNIÓN</div>
+
+      <!-- Nav Switcher -->
+      <div class="nav-toggle">
+        <button class="btn-vintage" id="btn-mode-guest" onclick="switchMode('guest')"><i class="fa-solid fa-martini-glass-citrus"></i> Menú Invitado</button>
+        <button class="btn-vintage secondary" id="btn-mode-bartender" onclick="promptBartenderAccess()"><i class="fa-solid fa-user-gear"></i> Centro de Mando</button>
+      </div>
+
+      <!-- GUEST VIEW -->
+      <div id="view-guest">
+        <div class="guest-welcome">
+          <label for="guest-name" style="font-family: 'Cinzel', serif; font-weight: bold;">TU NOMBRE O APODO:</label><br>
+          <input type="text" id="guest-name" class="input-vintage" placeholder="Escribe tu nombre aquí..." oninput="saveGuestName()">
+        </div>
+
+        <div id="active-order-box" style="display: none;">
+          <div class="order-status-box">
+            <h4 style="font-family: 'Cinzel', serif;">TU PEDIDO ACTUAL</h4>
+            <p id="order-drink-name" style="font-size: 1.2rem; font-weight: bold; margin-top: 5px;"></p>
+            <div id="order-status-badge" class="status-badge pending">PENDIENTE</div>
+            <p id="order-time" style="font-size: 0.85rem; color: var(--ink-muted); margin-top: 5px;"></p>
+          </div>
+        </div>
+
+        <h3 class="section-header">CARTA DE BEBIDAS</h3>
+        <div class="menu-grid" id="guest-menu-list"></div>
+      </div>
+
+      <!-- BARTENDER VIEW -->
+      <div id="view-bartender" class="panel-hidden">
+        <div class="admin-controls">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="font-family: 'Playfair Display', serif;"><i class="fa-solid fa-sliders"></i> Panel de Bartender</h3>
+            <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;"><button class="btn-vintage secondary" onclick="showQrModal()"><i class="fa-solid fa-qrcode"></i> Ver QR</button><button class="btn-vintage danger" onclick="logoutBartender()">Salir</button></div>
+          </div>
+          <button class="btn-vintage" onclick="showAddDrinkModal()"><i class="fa-solid fa-plus"></i> Añadir Nuevo Mocktail</button>
+        </div>
+
+        <h3 class="section-header"><i class="fa-solid fa-list-check"></i> COMANDAS ACTIVAS</h3>
+        <div id="bartender-orders-list"></div>
+
+        <h3 class="section-header" style="margin-top: 30px;"><i class="fa-solid fa-wine-bottle"></i> GESTIÓN DE CARTA / INVENTARIO</h3>
+        <div class="menu-grid" id="bartender-menu-list"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODALS -->
+  <div id="modal-login" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <h3 style="font-family: 'Cinzel', serif; margin-bottom: 10px;">ACCESO CENTRO DE MANDO</h3>
+      <p style="font-size: 0.95rem; margin-bottom: 12px;">Ingresa con el correo y la contraseña de bartender.</p>
+      <input type="email" id="admin-email" class="input-vintage" placeholder="Correo electrónico" autocomplete="username" style="margin-bottom: 8px;">
+      <input type="password" id="admin-password" class="input-vintage" placeholder="Contraseña" autocomplete="current-password" style="margin-bottom: 15px;">
+      <div>
+        <button class="btn-vintage" onclick="loginBartender()">INGRESAR</button>
+        <button class="btn-vintage secondary" onclick="closeModal('modal-login')">CANCELAR</button>
+      </div>
+      <p id="login-error" style="color:#9b2c2c; margin-top:10px;"></p>
+    </div>
+  </div>
+
+  <div id="modal-qr" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <h3 style="font-family: 'Cinzel', serif;">CÓDIGO QR DEL MENÚ</h3>
+      <p style="font-size: 0.9rem; margin-top: 5px;">Muestra este código a tus invitados:</p>
+      <div id="qrcode"></div>
+      <button class="btn-vintage secondary" onclick="closeModal('modal-qr')">CERRAR</button>
+    </div>
+  </div>
+
+  <div id="modal-drink" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <h3 id="drink-modal-title" style="font-family: 'Cinzel', serif; margin-bottom: 10px;">AÑADIR MOCKTAIL</h3>
+      <input type="hidden" id="edit-drink-id">
+      <div style="text-align: left; margin-bottom: 10px;">
+        <label style="font-size: 0.9rem; font-weight: bold;">Nombre del Mocktail:</label>
+        <input type="text" id="drink-name-input" class="input-vintage" style="max-width: 100%; text-align: left;">
+      </div>
+      <div style="text-align: left; margin-bottom: 15px;">
+        <label style="font-size: 0.9rem; font-weight: bold;">Descripción e Ingredientes:</label>
+        <textarea id="drink-desc-input" class="input-vintage" style="max-width: 100%; text-align: left; height: 80px; resize: vertical;"></textarea>
+      </div>
+      <div style="display: flex; justify-content: center; gap: 10px;">
+        <button class="btn-vintage" onclick="saveDrink()">GUARDAR</button>
+        <button class="btn-vintage secondary" onclick="closeModal('modal-drink')">CANCELAR</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import {
+      getAuth, onAuthStateChanged, signInAnonymously,
+      signInWithEmailAndPassword, signOut
+    } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import {
+      getFirestore, collection, doc, getDocs, onSnapshot, query, where,
+      addDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, runTransaction
+    } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBdgjeaW5jsyz1HBATcTZn7ZpvTY0WJT8A",
+      authDomain: "mocktails---jas.firebaseapp.com",
+      projectId: "mocktails---jas",
+      storageBucket: "mocktails---jas.firebasestorage.app",
+      messagingSenderId: "985563355587",
+      appId: "1:985563355587:web:5b7c8adc00a4306c6c0576"
+    };
+    const ADMIN_UID = "76aOy1nvx9PYDDQ1RnJxcAmtNZK2";
+    const firebaseApp = initializeApp(firebaseConfig);
+    const auth = getAuth(firebaseApp);
+    const db = getFirestore(firebaseApp);
+
+    const defaultMenu = [
+      { id: "rainbow", name: "Rainbow", desc: "Refrescante combinación por capas de jarabe de granadina, jugo de naranja fresco y toque de azul de curaçao sin alcohol.", soldOut: false },
+      { id: "shirley-temple", name: "Shirley Temple", desc: "El clásico de siempre con Ginger Ale, un chorrito de granadina y cereza al marrasquino.", soldOut: false },
+      { id: "grasshopper", name: "Pousse-Café Grasshopper", desc: "Mezcla densa y visual con jarabe de menta verde, crema de coco y toque de cacao.", soldOut: false },
+      { id: "pina-colada", name: "Piña Colada Mocktail", desc: "Cremosa mezcla tropical de crema de coco, jugo de piña concentrado y hielo frappé.", soldOut: false },
+      { id: "roy-rogers", name: "Roy Rogers", desc: "Bebida de carácter con base de bebida de cola, infusión de granadina y toque cítrico.", soldOut: false }
+    ];
+
+    let appData = { menu: [], orders: [] };
+    let currentUser = localStorage.getItem('jas_guest_name') || '';
+    let currentUid = null;
+    let isBartender = false;
+    let menuUnsubscribe = null;
+    let ordersUnsubscribe = null;
+    let authReady = false;
+    let suppressAnonymous = false;
+
+    const menuRef = collection(db, 'mocktails');
+    const ordersRef = collection(db, 'orders');
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    function normalizeDrink(id, data) {
+      const available = data.available ?? data.Available ?? !(data.soldOut ?? false);
+      return { id, name: data.name || 'Mocktail', desc: data.desc || data.description || '', soldOut: !available };
+    }
+    function normalizeOrder(id, data) {
+      const date = data.createdAt?.toDate ? data.createdAt.toDate() : null;
+      return { id, ...data, time: data.time || (date ? date.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '') };
+    }
+    async function seedMenuIfNeeded() {
+      const snapshot = await getDocs(menuRef);
+      const existing = new Set(snapshot.docs.map(d => d.id));
+      for (const drink of defaultMenu) {
+        if (!existing.has(drink.id)) {
+          await setDoc(doc(db, 'mocktails', drink.id), {
+            name: drink.name, desc: drink.desc, available: true
+          });
+        } else if (drink.id === 'rainbow') {
+          const old = snapshot.docs.find(d => d.id === drink.id)?.data() || {};
+          if (!old.desc && !old.description) {
+            await updateDoc(doc(db, 'mocktails', drink.id), { desc: drink.desc });
+          }
+        }
+      }
+    }
+    function startDataListeners() {
+      if (menuUnsubscribe) menuUnsubscribe();
+      if (ordersUnsubscribe) ordersUnsubscribe();
+      menuUnsubscribe = onSnapshot(menuRef, snapshot => {
+        appData.menu = snapshot.docs.map(d => normalizeDrink(d.id, d.data()));
+        appData.menu.sort((a,b) => defaultMenu.findIndex(x=>x.id===a.id) - defaultMenu.findIndex(x=>x.id===b.id));
+        renderAll();
+      }, error => alert('No se pudo cargar la carta: ' + error.message));
+
+      const orderQuery = isBartender ? ordersRef : query(ordersRef, where('guestUid', '==', currentUid));
+      ordersUnsubscribe = onSnapshot(orderQuery, snapshot => {
+        appData.orders = snapshot.docs.map(d => normalizeOrder(d.id, d.data()));
+        appData.orders.sort((a,b) => {
+          const ta = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+          const tb = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+          return ta - tb;
+        });
+        renderAll();
+      }, error => alert('No se pudieron cargar las comandas: ' + error.message));
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('guest-name').value = currentUser;
+      onAuthStateChanged(auth, async user => {
+        if (!user) {
+          if (suppressAnonymous) return;
+          try { await signInAnonymously(auth); }
+          catch (e) { console.error(e); alert('No se pudo iniciar la sesión de invitado. Revisa la conexión.'); }
+          return;
+        }
+        currentUid = user.uid;
+        isBartender = user.uid === ADMIN_UID && !user.isAnonymous;
+        authReady = true;
+        if (isBartender) {
+          document.getElementById('btn-mode-bartender').innerHTML = '<i class="fa-solid fa-user-gear"></i> Centro de Mando';
+          switchMode('bartender');
+        } else {
+          switchMode('guest');
+        }
+        startDataListeners();
+        if (!user.isAnonymous && !isBartender) {
+          await signOut(auth);
+        }
+        if (isBartender) {
+          try { await seedMenuIfNeeded(); }
+          catch (e) { console.error(e); alert('No se pudo preparar la carta: ' + e.message); }
+        }
+      });
+    });
+
+    function renderAll() {
+      renderGuestMenu();
+      renderActiveOrder();
+      if (isBartender) { renderBartenderOrders(); renderBartenderMenu(); }
+    }
+    function renderGuestMenu() {
+      const container = document.getElementById('guest-menu-list');
+      container.innerHTML = '';
+      appData.menu.forEach(drink => {
+        const card = document.createElement('div');
+        card.className = `drink-card ${drink.soldOut ? 'sold-out' : ''}`;
+        card.innerHTML = `
+          <div class="drink-title"><span>${escapeHtml(drink.name)}</span></div>
+          <div class="drink-desc">${escapeHtml(drink.desc)}</div>
+          <div class="drink-actions"><button class="btn-vintage" ${drink.soldOut ? 'disabled' : ''} onclick="placeOrder('${drink.id}')"><i class="fa-solid fa-glass-water"></i> PEDIR</button></div>`;
+        container.appendChild(card);
+      });
+    }
+    function renderActiveOrder() {
+      const box = document.getElementById('active-order-box');
+      if (!currentUser || !currentUid) { box.style.display = 'none'; return; }
+      const userOrders = appData.orders.filter(o => o.guestUid === currentUid);
+      const latestOrder = userOrders[userOrders.length - 1];
+      if (!latestOrder) { box.style.display = 'none'; return; }
+      box.style.display = 'block';
+      document.getElementById('order-drink-name').innerText = latestOrder.drinkName;
+      document.getElementById('order-time').innerText = `Hora: ${latestOrder.time || '—'}`;
+      const badge = document.getElementById('order-status-badge');
+      if (latestOrder.status === 'pendiente') { badge.className = 'status-badge pending'; badge.innerText = 'PENDIENTE'; }
+      else if (latestOrder.status === 'preparando') { badge.className = 'status-badge preparing'; badge.innerText = 'EN PREPARACIÓN...'; }
+      else { badge.className = 'status-badge ready'; badge.innerText = '¡LISTO PARA RECOGER!'; }
+    }
+    function renderBartenderOrders() {
+      const container = document.getElementById('bartender-orders-list');
+      container.innerHTML = '';
+      if (!appData.orders.length) { container.innerHTML = '<p style="text-align:center; font-style:italic;">No hay comandas por ahora.</p>'; return; }
+      appData.orders.slice().reverse().forEach(order => {
+        const ticket = document.createElement('div'); ticket.className = 'order-ticket';
+        ticket.innerHTML = `
+          <div class="order-ticket-header"><span><i class="fa-solid fa-user"></i> ${escapeHtml(order.guest)}</span><span>${escapeHtml(order.time)}</span></div>
+          <div style="font-size:1.2rem;font-weight:bold;color:var(--ink-dark);"><i class="fa-solid fa-martini-glass"></i> ${escapeHtml(order.drinkName)}</div>
+          <div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;">
+            <button class="btn-vintage ${order.status==='preparando'?'success':'secondary'}" style="font-size:0.75rem;padding:4px 8px;" onclick="updateOrderStatus('${order.id}','preparando')">Preparando</button>
+            <button class="btn-vintage ${order.status==='listo'?'success':'secondary'}" style="font-size:0.75rem;padding:4px 8px;" onclick="updateOrderStatus('${order.id}','listo')">¡Listo!</button>
+            <button class="btn-vintage danger" style="font-size:0.75rem;padding:4px 8px;" onclick="deleteOrder('${order.id}')"><i class="fa-solid fa-trash"></i></button>
+          </div>`;
+        container.appendChild(ticket);
+      });
+    }
+    function renderBartenderMenu() {
+      const container = document.getElementById('bartender-menu-list'); container.innerHTML = '';
+      appData.menu.forEach(drink => {
+        const card = document.createElement('div'); card.className = `drink-card ${drink.soldOut?'sold-out':''}`;
+        card.innerHTML = `
+          <div class="drink-title"><span>${escapeHtml(drink.name)}</span></div><div class="drink-desc">${escapeHtml(drink.desc)}</div>
+          <div class="drink-actions">
+            <button class="btn-vintage ${drink.soldOut?'success':'danger'}" style="font-size:0.8rem;" onclick="toggleSoldOut('${drink.id}')">${drink.soldOut?'Disponible':'Agotado'}</button>
+            <button class="btn-vintage secondary" style="font-size:0.8rem;" onclick="showEditDrinkModal('${drink.id}')"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn-vintage danger" style="font-size:0.8rem;" onclick="deleteDrink('${drink.id}')"><i class="fa-solid fa-trash"></i></button>
+          </div>`;
+        container.appendChild(card);
+      });
+    }
+    window.saveGuestName = function() {
+      currentUser = document.getElementById('guest-name').value.trim();
+      localStorage.setItem('jas_guest_name', currentUser);
+      renderActiveOrder();
+    };
+    window.placeOrder = async function(drinkId) {
+      if (!currentUser) { alert('Por favor ingresa tu nombre antes de pedir.'); document.getElementById('guest-name').focus(); return; }
+      const drink = appData.menu.find(m => m.id === drinkId);
+      if (!drink || drink.soldOut) return;
+      if (!currentUid || isBartender) { alert('Espera a que cargue tu sesión de invitado.'); return; }
+      const newRef = doc(ordersRef);
+      try {
+        await runTransaction(db, async transaction => {
+          const existing = await transaction.get(query(ordersRef, where('guestUid','==',currentUid)));
+          const hasActive = existing.docs.some(d => ['pendiente','preparando'].includes(d.data().status));
+          if (hasActive) throw new Error('Ya tienes una comanda activa. Espera a que esté lista antes de pedir otra.');
+          transaction.set(newRef, {
+            guestUid: currentUid, guest: currentUser, drinkId: drink.id,
+            drinkName: drink.name, status: 'pendiente',
+            time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),
+            createdAt: serverTimestamp()
+          });
+        });
+        alert(`¡Comanda enviada a la barra! Preparando tu ${drink.name}.`);
+      } catch (e) { alert(e.message || 'No se pudo enviar la comanda.'); }
+    };
+    window.updateOrderStatus = async function(orderId,status) {
+      if (!isBartender) return;
+      try { await updateDoc(doc(db,'orders',orderId), {status}); }
+      catch(e) { alert('No se pudo actualizar la comanda: '+e.message); }
+    };
+    window.deleteOrder = async function(orderId) {
+      if (!isBartender || !confirm('¿Eliminar esta comanda?')) return;
+      try { await deleteDoc(doc(db,'orders',orderId)); }
+      catch(e) { alert('No se pudo eliminar: '+e.message); }
+    };
+    window.toggleSoldOut = async function(drinkId) {
+      if (!isBartender) return;
+      const drink = appData.menu.find(m=>m.id===drinkId); if (!drink) return;
+      try { await updateDoc(doc(db,'mocktails',drinkId), {available: drink.soldOut}); }
+      catch(e) { alert('No se pudo actualizar la disponibilidad: '+e.message); }
+    };
+    window.deleteDrink = async function(drinkId) {
+      if (!isBartender || !confirm('¿Eliminar este mocktail de la carta?')) return;
+      try { await deleteDoc(doc(db,'mocktails',drinkId)); }
+      catch(e) { alert('No se pudo eliminar: '+e.message); }
+    };
+    window.promptBartenderAccess = function() {
+      if (isBartender) { switchMode('bartender'); return; }
+      document.getElementById('login-error').innerText='';
+      document.getElementById('modal-login').style.display='flex';
+    };
+    window.loginBartender = async function() {
+      const email = document.getElementById('admin-email').value.trim();
+      const password = document.getElementById('admin-password').value;
+      const errorBox = document.getElementById('login-error'); errorBox.innerText='';
+      if (!email || !password) { errorBox.innerText='Completa el correo y la contraseña.'; return; }
+      try {
+        suppressAnonymous = true;
+        await signOut(auth);
+        const credential = await signInWithEmailAndPassword(auth,email,password);
+        suppressAnonymous = false;
+        if (credential.user.uid !== ADMIN_UID) {
+          suppressAnonymous = true; await signOut(auth); suppressAnonymous = false; await signInAnonymously(auth);
+          throw new Error('Esta cuenta no tiene permisos de bartender.');
+        }
+        closeModal('modal-login');
+      } catch(e) { suppressAnonymous = false; errorBox.innerText = e.message || 'No se pudo iniciar sesión.'; if (!auth.currentUser) signInAnonymously(auth); }
+    };
+    window.logoutBartender = async function() {
+      try { suppressAnonymous=true; await signOut(auth); isBartender=false; switchMode('guest'); suppressAnonymous=false; await signInAnonymously(auth); }
+      catch(e) { alert('No se pudo cerrar la sesión: '+e.message); }
+    };
+    window.switchMode = function(mode) {
+      if (mode === 'bartender' && !isBartender) { window.promptBartenderAccess(); return; }
+      document.getElementById('view-bartender').classList.toggle('panel-hidden',mode!=='bartender');
+      document.getElementById('view-guest').classList.toggle('panel-hidden',mode==='bartender');
+      document.getElementById('btn-mode-guest').classList.toggle('secondary',mode==='bartender');
+      document.getElementById('btn-mode-bartender').classList.toggle('secondary',mode!=='bartender');
+      if (mode==='bartender') renderAll();
+    };
+    window.closeModal = function(modalId) { document.getElementById(modalId).style.display='none'; };
+    window.showQrModal = function() {
+      const qrContainer=document.getElementById('qrcode'); qrContainer.innerHTML='';
+      new QRCode(qrContainer,{text:window.location.href,width:180,height:180});
+      document.getElementById('modal-qr').style.display='flex';
+    };
+    window.showAddDrinkModal = function() {
+      document.getElementById('drink-modal-title').innerText='AÑADIR MOCKTAIL';
+      document.getElementById('edit-drink-id').value='';
+      document.getElementById('drink-name-input').value='';
+      document.getElementById('drink-desc-input').value='';
+      document.getElementById('modal-drink').style.display='flex';
+    };
+    window.showEditDrinkModal = function(drinkId) {
+      const drink=appData.menu.find(m=>m.id===drinkId); if(!drink)return;
+      document.getElementById('drink-modal-title').innerText='EDITAR MOCKTAIL';
+      document.getElementById('edit-drink-id').value=drink.id;
+      document.getElementById('drink-name-input').value=drink.name;
+      document.getElementById('drink-desc-input').value=drink.desc;
+      document.getElementById('modal-drink').style.display='flex';
+    };
+    window.saveDrink = async function() {
+      if(!isBartender)return;
+      const id=document.getElementById('edit-drink-id').value;
+      const name=document.getElementById('drink-name-input').value.trim();
+      const desc=document.getElementById('drink-desc-input').value.trim();
+      if(!name||!desc){alert('Por favor completa el nombre y la descripción.');return;}
+      try {
+        if(id) await updateDoc(doc(db,'mocktails',id),{name,desc});
+        else await addDoc(menuRef,{name,desc,available:true});
+        closeModal('modal-drink');
+      } catch(e) { alert('No se pudo guardar el mocktail: '+e.message); }
+    };
+  </script>
+</body>
+</html>
